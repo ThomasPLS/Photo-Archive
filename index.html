@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SportShot — Galerie d'événements</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,300&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0c0c0f;
+      --surface: #141418;
+      --surface2: #1c1c22;
+      --border: #2a2a35;
+      --accent: #e8ff47;
+      --accent2: #ff6b35;
+      --text: #f0f0f0;
+      --muted: #7a7a8a;
+      --radius: 12px;
+      --font-display: 'Bebas Neue', sans-serif;
+      --font-body: 'DM Sans', sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* NAV */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 32px;
+      height: 64px;
+      background: rgba(12,12,15,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo {
+      font-family: var(--font-display);
+      font-size: 28px;
+      letter-spacing: 2px;
+      color: var(--accent);
+      cursor: pointer;
+    }
+    .nav-logo span { color: var(--text); }
+    .nav-links { display: flex; gap: 8px; }
+    .nav-btn {
+      background: none; border: none; color: var(--muted);
+      font-family: var(--font-body); font-size: 14px; font-weight: 500;
+      padding: 8px 16px; border-radius: 8px; cursor: pointer;
+      transition: all 0.2s;
+    }
+    .nav-btn:hover, .nav-btn.active { color: var(--text); background: var(--surface2); }
+    .nav-btn.accent { background: var(--accent); color: #000; font-weight: 700; }
+    .nav-btn.accent:hover { background: #d4e83d; }
+
+    /* PAGES */
+    .page { display: none; padding-top: 80px; min-height: 100vh; animation: fadeIn 0.3s ease; }
+    .page.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* HERO */
+    .hero {
+      padding: 80px 32px 60px;
+      max-width: 1200px; margin: 0 auto;
+    }
+    .hero-tag {
+      display: inline-block;
+      background: var(--accent); color: #000;
+      font-size: 11px; font-weight: 700; letter-spacing: 2px;
+      padding: 4px 12px; border-radius: 4px; margin-bottom: 24px;
+    }
+    .hero h1 {
+      font-family: var(--font-display);
+      font-size: clamp(64px, 10vw, 120px);
+      line-height: 0.9;
+      letter-spacing: 2px;
+      margin-bottom: 32px;
+    }
+    .hero h1 em { color: var(--accent); font-style: normal; }
+    .hero p {
+      font-size: 18px; color: var(--muted); max-width: 500px;
+      line-height: 1.6; margin-bottom: 48px;
+    }
+    .hero-actions { display: flex; gap: 16px; flex-wrap: wrap; }
+    .btn-primary {
+      background: var(--accent); color: #000;
+      border: none; border-radius: 8px;
+      font-family: var(--font-body); font-size: 15px; font-weight: 700;
+      padding: 14px 28px; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-primary:hover { background: #d4e83d; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(232,255,71,0.25); }
+    .btn-secondary {
+      background: var(--surface2); color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px; font-family: var(--font-body);
+      font-size: 15px; font-weight: 500;
+      padding: 14px 28px; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* EVENTS GRID */
+    .section { padding: 0 32px 80px; max-width: 1200px; margin: 0 auto; }
+    .section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 32px;
+    }
+    .section-title {
+      font-family: var(--font-display);
+      font-size: 36px; letter-spacing: 1px;
+    }
+    .events-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+    }
+    .event-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.25s;
+      position: relative;
+    }
+    .event-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.4);
+    }
+    .event-thumb {
+      height: 180px;
+      background: var(--surface2);
+      position: relative;
+      overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .event-thumb-icon { font-size: 48px; opacity: 0.3; }
+    .event-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .event-card-body { padding: 20px; }
+    .event-card-sport {
+      font-size: 11px; font-weight: 700; letter-spacing: 2px;
+      color: var(--accent); text-transform: uppercase; margin-bottom: 8px;
+    }
+    .event-card-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+    .event-card-meta { font-size: 13px; color: var(--muted); display: flex; gap: 16px; }
+    .event-card-badge {
+      position: absolute; top: 12px; right: 12px;
+      background: rgba(0,0,0,0.7); color: var(--text);
+      font-size: 12px; font-weight: 600;
+      padding: 4px 10px; border-radius: 6px; backdrop-filter: blur(4px);
+    }
+    .event-empty {
+      grid-column: 1/-1;
+      text-align: center; padding: 80px 20px; color: var(--muted);
+    }
+    .event-empty-icon { font-size: 64px; margin-bottom: 16px; opacity: 0.4; }
+
+    /* ADD EVENT MODAL */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.75); backdrop-filter: blur(4px);
+      z-index: 200; align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px; width: 100%; max-width: 480px;
+      max-height: 90vh; overflow-y: auto;
+      animation: modalIn 0.25s ease;
+    }
+    @keyframes modalIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    .modal-title { font-family: var(--font-display); font-size: 28px; margin-bottom: 24px; }
+    .form-group { margin-bottom: 20px; }
+    label { display: block; font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 8px; letter-spacing: 0.5px; }
+    input[type=text], input[type=date], select, textarea {
+      width: 100%; padding: 12px 16px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text);
+      font-family: var(--font-body); font-size: 15px;
+      outline: none; transition: border-color 0.2s;
+    }
+    input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+    select option { background: var(--surface2); }
+    .modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 28px; }
+    .btn-cancel {
+      background: none; border: 1px solid var(--border);
+      color: var(--muted); border-radius: 8px; padding: 10px 20px;
+      cursor: pointer; font-family: var(--font-body); transition: all 0.2s;
+    }
+    .btn-cancel:hover { border-color: var(--muted); color: var(--text); }
+
+    /* EVENT PAGE */
+    .event-header {
+      padding: 40px 32px 32px;
+      max-width: 1200px; margin: 0 auto;
+      border-bottom: 1px solid var(--border);
+    }
+    .breadcrumb {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 13px; color: var(--muted); margin-bottom: 20px;
+    }
+    .breadcrumb-link { cursor: pointer; transition: color 0.2s; }
+    .breadcrumb-link:hover { color: var(--accent); }
+    .breadcrumb-sep { opacity: 0.4; }
+    .event-title-bar { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+    .event-page-sport {
+      font-size: 12px; font-weight: 700; letter-spacing: 2px;
+      color: var(--accent); text-transform: uppercase; margin-bottom: 8px;
+    }
+    .event-page-title { font-family: var(--font-display); font-size: clamp(36px, 6vw, 64px); }
+    .event-page-meta { font-size: 14px; color: var(--muted); margin-top: 8px; }
+
+    /* TOOLBAR */
+    .event-toolbar {
+      padding: 24px 32px;
+      max-width: 1200px; margin: 0 auto;
+      display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+    }
+    .filter-pill {
+      background: var(--surface2); border: 1px solid var(--border);
+      color: var(--muted); border-radius: 24px;
+      padding: 8px 16px; font-size: 13px; font-weight: 500;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .filter-pill:hover, .filter-pill.active {
+      background: var(--accent); border-color: var(--accent);
+      color: #000; font-weight: 700;
+    }
+
+    /* PHOTO GRID */
+    .photo-section { padding: 0 32px 80px; max-width: 1200px; margin: 0 auto; }
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+    }
+    .photo-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); overflow: hidden;
+      transition: all 0.25s; cursor: pointer;
+    }
+    .photo-card:hover { border-color: var(--border); transform: scale(1.02); box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+    .photo-img-wrap {
+      aspect-ratio: 4/3; background: var(--surface2);
+      overflow: hidden; position: relative;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .photo-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
+    .photo-img-placeholder { font-size: 40px; opacity: 0.2; }
+    .photo-card-body { padding: 14px 16px; }
+    .photo-athletes {
+      display: flex; gap: 6px; flex-wrap: wrap;
+    }
+    .athlete-tag {
+      background: rgba(232,255,71,0.12); color: var(--accent);
+      font-size: 12px; font-weight: 600;
+      padding: 3px 10px; border-radius: 20px;
+      border: 1px solid rgba(232,255,71,0.25);
+      cursor: pointer; transition: all 0.2s;
+    }
+    .athlete-tag:hover { background: var(--accent); color: #000; }
+    .photo-date { font-size: 12px; color: var(--muted); margin-top: 8px; }
+    .photo-empty { text-align: center; padding: 80px 20px; color: var(--muted); grid-column: 1/-1; }
+
+    /* ADD PHOTO FORM */
+    .add-photo-zone {
+      border: 2px dashed var(--border); border-radius: var(--radius);
+      padding: 40px; text-align: center; cursor: pointer;
+      transition: all 0.2s; background: var(--surface);
+      margin-bottom: 24px;
+    }
+    .add-photo-zone:hover { border-color: var(--accent); background: rgba(232,255,71,0.04); }
+    .add-photo-zone p { color: var(--muted); font-size: 14px; margin-top: 12px; }
+    .add-photo-zone .zone-icon { font-size: 40px; opacity: 0.5; }
+    #fileInput { display: none; }
+    .preview-img {
+      width: 100%; max-height: 240px; object-fit: cover;
+      border-radius: 8px; margin-bottom: 16px;
+    }
+
+    /* ATHLETE AUTOCOMPLETE */
+    .autocomplete-wrap { position: relative; }
+    .autocomplete-list {
+      position: absolute; top: 100%; left: 0; right: 0;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-top: none; border-radius: 0 0 8px 8px;
+      z-index: 50; max-height: 200px; overflow-y: auto;
+      display: none;
+    }
+    .autocomplete-list.open { display: block; }
+    .autocomplete-item {
+      padding: 10px 16px; font-size: 14px; cursor: pointer; transition: background 0.15s;
+    }
+    .autocomplete-item:hover { background: var(--surface); color: var(--accent); }
+    .selected-athletes { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+    .selected-tag {
+      background: rgba(232,255,71,0.15); color: var(--accent);
+      font-size: 13px; padding: 5px 12px; border-radius: 20px;
+      display: flex; align-items: center; gap: 6px;
+      border: 1px solid rgba(232,255,71,0.3);
+    }
+    .selected-tag-rm {
+      cursor: pointer; font-size: 16px; line-height: 1;
+      color: var(--accent); opacity: 0.7;
+    }
+    .selected-tag-rm:hover { opacity: 1; }
+
+    /* ATHLETES PAGE */
+    .athletes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+    }
+    .athlete-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 28px 20px;
+      text-align: center; cursor: pointer; transition: all 0.25s;
+    }
+    .athlete-card:hover { border-color: var(--accent); transform: translateY(-3px); box-shadow: 0 10px 28px rgba(0,0,0,0.35); }
+    .athlete-avatar {
+      width: 64px; height: 64px; border-radius: 50%;
+      background: var(--surface2); border: 2px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px; margin: 0 auto 16px;
+      transition: border-color 0.2s;
+    }
+    .athlete-card:hover .athlete-avatar { border-color: var(--accent); }
+    .athlete-name { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+    .athlete-count { font-size: 13px; color: var(--muted); }
+    .athlete-count span { color: var(--accent); font-weight: 700; }
+
+    /* ATHLETE GALLERY PAGE */
+    .athlete-hero {
+      padding: 40px 32px 32px; max-width: 1200px; margin: 0 auto;
+      display: flex; align-items: center; gap: 28px; flex-wrap: wrap;
+    }
+    .athlete-hero-avatar {
+      width: 96px; height: 96px; border-radius: 50%;
+      background: var(--surface2); border: 3px solid var(--accent);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 48px; flex-shrink: 0;
+    }
+    .athlete-hero-name { font-family: var(--font-display); font-size: clamp(40px, 7vw, 72px); }
+    .athlete-hero-sub { font-size: 14px; color: var(--muted); margin-top: 4px; }
+
+    /* PHOTO LIGHTBOX */
+    .lightbox {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.92); z-index: 300;
+      align-items: center; justify-content: center;
+    }
+    .lightbox.open { display: flex; }
+    .lightbox img { max-width: 90vw; max-height: 85vh; border-radius: 8px; object-fit: contain; }
+    .lightbox-close {
+      position: absolute; top: 20px; right: 24px;
+      font-size: 32px; cursor: pointer; color: var(--muted); line-height: 1;
+      transition: color 0.2s;
+    }
+    .lightbox-close:hover { color: var(--text); }
+    .lightbox-caption {
+      position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%);
+      display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;
+    }
+
+    /* TOAST */
+    .toast {
+      position: fixed; bottom: 24px; right: 24px; z-index: 500;
+      background: var(--accent); color: #000;
+      font-weight: 700; font-size: 14px;
+      padding: 12px 20px; border-radius: 8px;
+      transform: translateY(80px); opacity: 0;
+      transition: all 0.3s; pointer-events: none;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+
+    /* UTILS */
+    .divider { border: none; border-top: 1px solid var(--border); margin: 0; }
+    .stats-bar {
+      display: flex; gap: 32px; padding: 20px 32px;
+      border-bottom: 1px solid var(--border);
+      max-width: 1200px; margin: 0 auto;
+    }
+    .stat { text-align: left; }
+    .stat-num { font-family: var(--font-display); font-size: 32px; color: var(--accent); }
+    .stat-label { font-size: 12px; color: var(--muted); letter-spacing: 0.5px; margin-top: 2px; }
+
+    @media (max-width: 600px) {
+      nav { padding: 0 16px; }
+      .hero, .section, .event-header, .event-toolbar, .photo-section { padding-left: 16px; padding-right: 16px; }
+      .athlete-hero { padding: 24px 16px; }
+      .stats-bar { padding: 16px; gap: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo" onclick="navigate('home')">SPORT<span>SHOT</span></div>
+  <div class="nav-links">
+    <button class="nav-btn active" id="nav-home" onclick="navigate('home')">Événements</button>
+    <button class="nav-btn" id="nav-athletes" onclick="navigate('athletes')">Sportifs</button>
+  </div>
+</nav>
+
+<!-- PAGE: HOME -->
+<div class="page active" id="page-home">
+  <div class="hero">
+    <div class="hero-tag">📸 GALERIE SPORTIVE</div>
+    <h1>TOUTES<br>LES <em>SHOTS</em></h1>
+    <p>Retrouvez les photos de vos événements sportifs, identifiez les athlètes et explorez leurs galeries.</p>
+    <div class="hero-actions">
+      <button class="btn-primary" onclick="openModal('addEvent')">+ Nouvel événement</button>
+      <button class="btn-secondary" onclick="navigate('athletes')">Voir les sportifs →</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">ÉVÉNEMENTS</div>
+    </div>
+    <div class="events-grid" id="eventsGrid">
+      <!-- filled by JS -->
+    </div>
+  </div>
+</div>
+
+<!-- PAGE: EVENT -->
+<div class="page" id="page-event">
+  <div class="event-header">
+    <div class="breadcrumb">
+      <span class="breadcrumb-link" onclick="navigate('home')">Événements</span>
+      <span class="breadcrumb-sep">/</span>
+      <span id="breadcrumbEventName">—</span>
+    </div>
+    <div class="event-title-bar">
+      <div>
+        <div class="event-page-sport" id="eventPageSport"></div>
+        <div class="event-page-title" id="eventPageTitle"></div>
+        <div class="event-page-meta" id="eventPageMeta"></div>
+      </div>
+      <button class="btn-primary" onclick="openModal('addPhoto')">+ Ajouter une photo</button>
+    </div>
+  </div>
+
+  <div class="stats-bar" id="eventStats">
+    <div class="stat"><div class="stat-num" id="statPhotos">0</div><div class="stat-label">PHOTOS</div></div>
+    <div class="stat"><div class="stat-num" id="statAthletes">0</div><div class="stat-label">SPORTIFS</div></div>
+  </div>
+
+  <div class="event-toolbar">
+    <div class="filter-pill active" onclick="filterPhotos(null, this)">Toutes</div>
+    <div id="athleteFilters"></div>
+  </div>
+
+  <div class="photo-section">
+    <div class="photo-grid" id="photoGrid">
+      <!-- filled by JS -->
+    </div>
+  </div>
+</div>
+
+<!-- PAGE: ATHLETES -->
+<div class="page" id="page-athletes">
+  <div class="event-header">
+    <div class="breadcrumb">
+      <span class="breadcrumb-link" onclick="navigate('home')">Accueil</span>
+      <span class="breadcrumb-sep">/</span>
+      <span>Sportifs</span>
+    </div>
+    <div class="event-page-title">LES SPORTIFS</div>
+  </div>
+  <div class="section" style="padding-top:32px;">
+    <div class="athletes-grid" id="athletesGrid"></div>
+  </div>
+</div>
+
+<!-- PAGE: ATHLETE GALLERY -->
+<div class="page" id="page-athlete">
+  <div class="event-header">
+    <div class="breadcrumb">
+      <span class="breadcrumb-link" onclick="navigate('athletes')">Sportifs</span>
+      <span class="breadcrumb-sep">/</span>
+      <span id="breadcrumbAthleteName">—</span>
+    </div>
+    <div class="athlete-hero" style="padding-left:0; padding-top:16px;">
+      <div class="athlete-hero-avatar" id="athleteHeroAvatar">🏃</div>
+      <div>
+        <div class="athlete-hero-name" id="athleteHeroName"></div>
+        <div class="athlete-hero-sub" id="athleteHeroSub"></div>
+      </div>
+    </div>
+  </div>
+  <div class="photo-section" style="padding-top:32px;">
+    <div class="photo-grid" id="athletePhotoGrid"></div>
+  </div>
+</div>
+
+<!-- MODAL: ADD EVENT -->
+<div class="modal-overlay" id="modal-addEvent">
+  <div class="modal">
+    <div class="modal-title">NOUVEL ÉVÉNEMENT</div>
+    <div class="form-group">
+      <label>NOM DE L'ÉVÉNEMENT</label>
+      <input type="text" id="evtName" placeholder="ex: Championnat régional de natation">
+    </div>
+    <div class="form-group">
+      <label>SPORT</label>
+      <input type="text" id="evtSport" placeholder="ex: Natation, Football, Cyclisme…">
+    </div>
+    <div class="form-group">
+      <label>DATE</label>
+      <input type="date" id="evtDate">
+    </div>
+    <div class="form-group">
+      <label>LIEU</label>
+      <input type="text" id="evtLocation" placeholder="ex: Paris, Stade municipal…">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('addEvent')">Annuler</button>
+      <button class="btn-primary" onclick="saveEvent()">Créer l'événement</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: ADD PHOTO -->
+<div class="modal-overlay" id="modal-addPhoto">
+  <div class="modal">
+    <div class="modal-title">AJOUTER UNE PHOTO</div>
+    <input type="file" id="fileInput" accept="image/*" onchange="previewPhoto(event)">
+    <div class="add-photo-zone" onclick="document.getElementById('fileInput').click()">
+      <div class="zone-icon" id="zoneIcon">📁</div>
+      <img id="photoPreview" class="preview-img" style="display:none;">
+      <p id="zoneText">Cliquer pour choisir une photo</p>
+    </div>
+    <div class="form-group">
+      <label>SPORTIF(S) SUR LA PHOTO</label>
+      <div class="autocomplete-wrap">
+        <input type="text" id="athleteInput" placeholder="Commencer à taper un nom…" oninput="onAthleteInput()" onkeydown="onAthleteKey(event)" autocomplete="off">
+        <div class="autocomplete-list" id="autocompleteList"></div>
+      </div>
+      <div class="selected-athletes" id="selectedAthletes"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('addPhoto')">Annuler</button>
+      <button class="btn-primary" onclick="savePhoto()">Ajouter la photo</button>
+    </div>
+  </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <div class="lightbox-close" onclick="closeLightbox()">✕</div>
+  <img id="lightboxImg" src="" alt="">
+  <div class="lightbox-caption" id="lightboxCaption"></div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+let DB = {
+  events: [],
+  photos: [],
+  athletes: [],
+  nextEventId: 1,
+  nextPhotoId: 1,
+};
+
+let currentEventId = null;
+let currentAthleteId = null;
+let selectedAthletes = [];
+let photoDataUrl = null;
+let activeFilterAthlete = null;
+
+// ============================================================
+// PERSISTENCE
+// ============================================================
+function save() {
+  try { localStorage.setItem('sportshot_db', JSON.stringify(DB)); } catch(e) {}
+}
+function load() {
+  try {
+    const raw = localStorage.getItem('sportshot_db');
+    if (raw) DB = JSON.parse(raw);
+  } catch(e) {}
+}
+
+// ============================================================
+// NAVIGATE
+// ============================================================
+function navigate(page, id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+
+  if (page === 'home') {
+    document.getElementById('page-home').classList.add('active');
+    document.getElementById('nav-home').classList.add('active');
+    renderEvents();
+  } else if (page === 'event') {
+    currentEventId = id;
+    document.getElementById('page-event').classList.add('active');
+    document.getElementById('nav-home').classList.add('active');
+    renderEventPage();
+  } else if (page === 'athletes') {
+    document.getElementById('page-athletes').classList.add('active');
+    document.getElementById('nav-athletes').classList.add('active');
+    renderAthletesPage();
+  } else if (page === 'athlete') {
+    currentAthleteId = id;
+    document.getElementById('page-athlete').classList.add('active');
+    document.getElementById('nav-athletes').classList.add('active');
+    renderAthleteGallery();
+  }
+  window.scrollTo(0,0);
+}
+
+// ============================================================
+// MODALS
+// ============================================================
+function openModal(name) {
+  if (name === 'addPhoto') {
+    photoDataUrl = null;
+    selectedAthletes = [];
+    document.getElementById('athleteInput').value = '';
+    document.getElementById('photoPreview').style.display = 'none';
+    document.getElementById('zoneIcon').style.display = 'block';
+    document.getElementById('zoneText').textContent = 'Cliquer pour choisir une photo';
+    document.getElementById('fileInput').value = '';
+    renderSelectedAthletes();
+    closeAutocomplete();
+  }
+  if (name === 'addEvent') {
+    document.getElementById('evtName').value = '';
+    document.getElementById('evtSport').value = '';
+    document.getElementById('evtDate').value = '';
+    document.getElementById('evtLocation').value = '';
+  }
+  document.getElementById('modal-' + name).classList.add('open');
+}
+function closeModal(name) {
+  document.getElementById('modal-' + name).classList.remove('open');
+}
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', function(e) { if (e.target === this) this.classList.remove('open'); });
+});
+
+// ============================================================
+// EVENTS
+// ============================================================
+function saveEvent() {
+  const name = document.getElementById('evtName').value.trim();
+  const sport = document.getElementById('evtSport').value.trim();
+  const date = document.getElementById('evtDate').value;
+  const location = document.getElementById('evtLocation').value.trim();
+  if (!name) { showToast('Veuillez entrer un nom d\'événement'); return; }
+  const evt = { id: DB.nextEventId++, name, sport, date, location, createdAt: Date.now() };
+  DB.events.push(evt);
+  save();
+  closeModal('addEvent');
+  renderEvents();
+  showToast('Événement créé ✓');
+}
+
+const SPORT_ICONS = {
+  natation: '🏊', football: '⚽', cyclisme: '🚴', rugby: '🏉',
+  tennis: '🎾', basketball: '🏀', athlétisme: '🏃', volleyball: '🏐',
+  handball: '🤾', judo: '🥋', escrime: '🤺', boxe: '🥊',
+  ski: '⛷️', snowboard: '🏂', escalade: '🧗', triathlon: '🏅',
+};
+function sportIcon(sport) {
+  if (!sport) return '🏆';
+  const key = sport.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  for (const k in SPORT_ICONS) if (key.includes(k)) return SPORT_ICONS[k];
+  return '🏆';
+}
+
+function renderEvents() {
+  const grid = document.getElementById('eventsGrid');
+  if (!DB.events.length) {
+    grid.innerHTML = `<div class="event-empty"><div class="event-empty-icon">📸</div><p>Aucun événement pour l'instant.<br>Créez votre premier événement !</p></div>`;
+    return;
+  }
+  grid.innerHTML = DB.events.map(evt => {
+    const photos = DB.photos.filter(p => p.eventId === evt.id);
+    const thumb = photos.find(p => p.dataUrl);
+    const icon = sportIcon(evt.sport);
+    const dateStr = evt.date ? new Date(evt.date).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' }) : '';
+    return `<div class="event-card" onclick="navigate('event',${evt.id})">
+      <div class="event-thumb">
+        ${thumb ? `<img src="${thumb.dataUrl}" alt="">` : `<div class="event-thumb-icon">${icon}</div>`}
+        <div class="event-card-badge">${photos.length} photo${photos.length!==1?'s':''}</div>
+      </div>
+      <div class="event-card-body">
+        <div class="event-card-sport">${evt.sport || 'Sport'} ${icon}</div>
+        <div class="event-card-title">${evt.name}</div>
+        <div class="event-card-meta">
+          ${dateStr ? `<span>📅 ${dateStr}</span>` : ''}
+          ${evt.location ? `<span>📍 ${evt.location}</span>` : ''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+// EVENT PAGE
+// ============================================================
+function renderEventPage() {
+  const evt = DB.events.find(e => e.id === currentEventId);
+  if (!evt) { navigate('home'); return; }
+
+  document.getElementById('breadcrumbEventName').textContent = evt.name;
+  document.getElementById('eventPageSport').textContent = evt.sport || '';
+  document.getElementById('eventPageTitle').textContent = evt.name;
+  const dateStr = evt.date ? new Date(evt.date).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' }) : '';
+  document.getElementById('eventPageMeta').textContent = [dateStr, evt.location].filter(Boolean).join(' · ');
+
+  activeFilterAthlete = null;
+  renderEventPhotos();
+  renderAthleteFilters();
+}
+
+function renderAthleteFilters() {
+  const photos = DB.photos.filter(p => p.eventId === currentEventId);
+  const athleteIds = [...new Set(photos.flatMap(p => p.athletes||[]))];
+  const container = document.getElementById('athleteFilters');
+  container.innerHTML = athleteIds.map(aid => {
+    const ath = DB.athletes.find(a => a.id === aid);
+    if (!ath) return '';
+    return `<span class="filter-pill" onclick="filterPhotos(${aid}, this)">${ath.name}</span>`;
+  }).join('');
+
+  const stats = document.getElementById('statPhotos');
+  const statA = document.getElementById('statAthletes');
+  stats.textContent = photos.length;
+  statA.textContent = athleteIds.length;
+}
+
+function filterPhotos(athleteId, el) {
+  activeFilterAthlete = athleteId;
+  document.querySelectorAll('#page-event .filter-pill, #page-event .event-toolbar .filter-pill').forEach(p => p.classList.remove('active'));
+  if (el) el.classList.add('active');
+  // also reset the "Toutes" pill
+  const allPill = document.querySelector('#page-event .event-toolbar .filter-pill');
+  if (!athleteId && allPill) allPill.classList.add('active');
+  renderEventPhotos();
+}
+
+function renderEventPhotos() {
+  let photos = DB.photos.filter(p => p.eventId === currentEventId);
+  if (activeFilterAthlete) {
+    photos = photos.filter(p => (p.athletes||[]).includes(activeFilterAthlete));
+  }
+  const grid = document.getElementById('photoGrid');
+  if (!photos.length) {
+    grid.innerHTML = `<div class="photo-empty"><p style="font-size:40px;opacity:.3;">📷</p><p style="margin-top:12px">Aucune photo${activeFilterAthlete ? ' pour ce sportif' : ''}.</p></div>`;
+    return;
+  }
+  grid.innerHTML = photos.map(photo => {
+    const tags = (photo.athletes||[]).map(aid => {
+      const ath = DB.athletes.find(a => a.id === aid);
+      return ath ? `<span class="athlete-tag" onclick="event.stopPropagation();navigate('athlete',${ath.id})">${ath.name}</span>` : '';
+    }).join('');
+    return `<div class="photo-card" onclick="openLightbox(${photo.id})">
+      <div class="photo-img-wrap">
+        ${photo.dataUrl ? `<img src="${photo.dataUrl}" alt="" loading="lazy">` : `<div class="photo-img-placeholder">📷</div>`}
+      </div>
+      <div class="photo-card-body">
+        <div class="photo-athletes">${tags || '<span style="color:var(--muted);font-size:12px">Sans sportif</span>'}</div>
+        <div class="photo-date">${new Date(photo.createdAt).toLocaleDateString('fr-FR')}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+// ADD PHOTO
+// ============================================================
+function previewPhoto(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    photoDataUrl = ev.target.result;
+    const preview = document.getElementById('photoPreview');
+    preview.src = photoDataUrl;
+    preview.style.display = 'block';
+    document.getElementById('zoneIcon').style.display = 'none';
+    document.getElementById('zoneText').textContent = file.name;
+  };
+  reader.readAsDataURL(file);
+}
+
+function savePhoto() {
+  if (!photoDataUrl) { showToast('Veuillez choisir une photo'); return; }
+  const photo = {
+    id: DB.nextPhotoId++,
+    eventId: currentEventId,
+    dataUrl: photoDataUrl,
+    athletes: selectedAthletes.map(a => a.id),
+    createdAt: Date.now(),
+  };
+  DB.photos.push(photo);
+  save();
+  closeModal('addPhoto');
+  renderEventPhotos();
+  renderAthleteFilters();
+  showToast('Photo ajoutée ✓');
+}
+
+// ============================================================
+// ATHLETE AUTOCOMPLETE
+// ============================================================
+function onAthleteInput() {
+  const val = document.getElementById('athleteInput').value.trim();
+  if (!val) { closeAutocomplete(); return; }
+  const matches = DB.athletes.filter(a =>
+    a.name.toLowerCase().includes(val.toLowerCase()) &&
+    !selectedAthletes.find(s => s.id === a.id)
+  );
+  const list = document.getElementById('autocompleteList');
+  if (!matches.length) {
+    list.innerHTML = `<div class="autocomplete-item" onclick="addNewAthlete()">➕ Ajouter "<strong>${val}</strong>"</div>`;
+  } else {
+    const items = matches.map(a => `<div class="autocomplete-item" onclick="selectAthlete(${a.id})">${a.name}</div>`).join('');
+    list.innerHTML = items + `<div class="autocomplete-item" style="border-top:1px solid var(--border)" onclick="addNewAthlete()">➕ Nouveau : "<strong>${val}</strong>"</div>`;
+  }
+  list.classList.add('open');
+}
+
+function onAthleteKey(e) {
+  if (e.key === 'Enter') {
+    const val = document.getElementById('athleteInput').value.trim();
+    if (!val) return;
+    const match = DB.athletes.find(a => a.name.toLowerCase() === val.toLowerCase());
+    if (match) selectAthlete(match.id);
+    else addNewAthlete();
+    e.preventDefault();
+  }
+  if (e.key === 'Escape') closeAutocomplete();
+}
+
+function selectAthlete(id) {
+  const ath = DB.athletes.find(a => a.id === id);
+  if (!ath || selectedAthletes.find(s => s.id === id)) return;
+  selectedAthletes.push(ath);
+  document.getElementById('athleteInput').value = '';
+  closeAutocomplete();
+  renderSelectedAthletes();
+}
+
+function addNewAthlete() {
+  const val = document.getElementById('athleteInput').value.trim();
+  if (!val) return;
+  let ath = DB.athletes.find(a => a.name.toLowerCase() === val.toLowerCase());
+  if (!ath) {
+    ath = { id: DB.athletes.length ? Math.max(...DB.athletes.map(a=>a.id))+1 : 1, name: val };
+    DB.athletes.push(ath);
+    save();
+  }
+  selectAthlete(ath.id);
+}
+
+function removeSelectedAthlete(id) {
+  selectedAthletes = selectedAthletes.filter(a => a.id !== id);
+  renderSelectedAthletes();
+}
+
+function renderSelectedAthletes() {
+  document.getElementById('selectedAthletes').innerHTML = selectedAthletes.map(a =>
+    `<span class="selected-tag">${a.name}<span class="selected-tag-rm" onclick="removeSelectedAthlete(${a.id})">×</span></span>`
+  ).join('');
+}
+
+function closeAutocomplete() {
+  document.getElementById('autocompleteList').classList.remove('open');
+}
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.autocomplete-wrap')) closeAutocomplete();
+});
+
+// ============================================================
+// ATHLETES PAGE
+// ============================================================
+function renderAthletesPage() {
+  const grid = document.getElementById('athletesGrid');
+  if (!DB.athletes.length) {
+    grid.innerHTML = `<div class="event-empty" style="grid-column:1/-1"><div class="event-empty-icon">🏃</div><p>Aucun sportif enregistré.<br>Ajoutez des photos avec des sportifs !</p></div>`;
+    return;
+  }
+  grid.innerHTML = DB.athletes.map(ath => {
+    const count = DB.photos.filter(p => (p.athletes||[]).includes(ath.id)).length;
+    return `<div class="athlete-card" onclick="navigate('athlete',${ath.id})">
+      <div class="athlete-avatar">🏃</div>
+      <div class="athlete-name">${ath.name}</div>
+      <div class="athlete-count"><span>${count}</span> photo${count!==1?'s':''}</div>
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+// ATHLETE GALLERY
+// ============================================================
+function renderAthleteGallery() {
+  const ath = DB.athletes.find(a => a.id === currentAthleteId);
+  if (!ath) { navigate('athletes'); return; }
+
+  document.getElementById('breadcrumbAthleteName').textContent = ath.name;
+  document.getElementById('athleteHeroName').textContent = ath.name;
+  document.getElementById('athleteHeroAvatar').textContent = '🏃';
+
+  const photos = DB.photos.filter(p => (p.athletes||[]).includes(ath.id));
+  document.getElementById('athleteHeroSub').textContent = `${photos.length} photo${photos.length!==1?'s':''} • ${[...new Set(photos.map(p=>p.eventId))].length} événement${[...new Set(photos.map(p=>p.eventId))].length!==1?'s':''}`;
+
+  const grid = document.getElementById('athletePhotoGrid');
+  if (!photos.length) {
+    grid.innerHTML = `<div class="photo-empty"><p style="font-size:40px;opacity:.3;">📷</p><p style="margin-top:12px">Aucune photo pour ce sportif.</p></div>`;
+    return;
+  }
+  grid.innerHTML = photos.map(photo => {
+    const evt = DB.events.find(e => e.id === photo.eventId);
+    const otherAthletes = (photo.athletes||[])
+      .filter(aid => aid !== currentAthleteId)
+      .map(aid => { const a = DB.athletes.find(x=>x.id===aid); return a ? `<span class="athlete-tag" onclick="event.stopPropagation();navigate('athlete',${a.id})">${a.name}</span>` : ''; })
+      .join('');
+    return `<div class="photo-card" onclick="openLightbox(${photo.id})">
+      <div class="photo-img-wrap">
+        ${photo.dataUrl ? `<img src="${photo.dataUrl}" alt="" loading="lazy">` : '<div class="photo-img-placeholder">📷</div>'}
+      </div>
+      <div class="photo-card-body">
+        ${evt ? `<div style="font-size:12px;color:var(--accent);font-weight:600;margin-bottom:6px">${evt.name}</div>` : ''}
+        <div class="photo-athletes">${otherAthletes}</div>
+        <div class="photo-date">${new Date(photo.createdAt).toLocaleDateString('fr-FR')}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+// LIGHTBOX
+// ============================================================
+function openLightbox(photoId) {
+  const photo = DB.photos.find(p => p.id === photoId);
+  if (!photo || !photo.dataUrl) return;
+  document.getElementById('lightboxImg').src = photo.dataUrl;
+  const caption = document.getElementById('lightboxCaption');
+  const tags = (photo.athletes||[]).map(aid => {
+    const ath = DB.athletes.find(a => a.id === aid);
+    return ath ? `<span class="athlete-tag" style="font-size:14px;padding:6px 14px">${ath.name}</span>` : '';
+  }).join('');
+  caption.innerHTML = tags;
+  document.getElementById('lightbox').classList.add('open');
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+
+// ============================================================
+// TOAST
+// ============================================================
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ============================================================
+// DEMO DATA
+// ============================================================
+function loadDemo() {
+  if (DB.events.length) return; // don't override existing
+  DB.athletes = [
+    { id: 1, name: 'Marie Dupont' },
+    { id: 2, name: 'Lucas Martin' },
+    { id: 3, name: 'Camille Lefèvre' },
+  ];
+  DB.events = [
+    { id: 1, name: 'Championnat Régional Natation', sport: 'Natation', date: '2024-06-15', location: 'Nantes', createdAt: Date.now() },
+    { id: 2, name: 'Tournoi de Tennis Open', sport: 'Tennis', date: '2024-07-20', location: 'Angers', createdAt: Date.now() },
+  ];
+  DB.photos = [
+    { id: 1, eventId: 1, dataUrl: null, athletes: [1,2], createdAt: Date.now()-5000 },
+    { id: 2, eventId: 1, dataUrl: null, athletes: [3], createdAt: Date.now()-3000 },
+    { id: 3, eventId: 2, dataUrl: null, athletes: [2], createdAt: Date.now()-1000 },
+  ];
+  DB.nextEventId = 3;
+  DB.nextPhotoId = 4;
+  save();
+}
+
+// ============================================================
+// INIT
+// ============================================================
+load();
+loadDemo();
+navigate('home');
+</script>
+</body>
+</html>
