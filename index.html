@@ -158,14 +158,14 @@
       box-shadow: 0 12px 32px rgba(0,0,0,0.4);
     }
     .event-thumb {
-      max-height: 220px;
+      height: 180px;
       background: var(--surface2);
       position: relative;
       overflow: hidden;
       display: flex; align-items: center; justify-content: center;
     }
     .event-thumb-icon { font-size: 48px; opacity: 0.3; }
-    .event-thumb img { width: 100%; height: auto; max-height: 220px; object-fit: contain; display: block; }
+    .event-thumb img { width: 100%; height: 100%; object-fit: cover; }
     .event-card-body { padding: 20px; }
     .event-card-sport {
       font-size: 11px; font-weight: 700; letter-spacing: 2px;
@@ -309,12 +309,11 @@
     }
     .photo-card:hover { border-color: var(--border); transform: scale(1.02); box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
     .photo-img-wrap {
-      background: var(--surface2);
+      aspect-ratio: 4/3; background: var(--surface2);
       overflow: hidden; position: relative;
       display: flex; align-items: center; justify-content: center;
-      max-height: 320px;
     }
-    .photo-img-wrap img { width: 100%; height: auto; max-height: 320px; object-fit: contain; display: block; }
+    .photo-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
     .photo-img-placeholder { font-size: 40px; opacity: 0.2; }
     .photo-card-body { padding: 14px 16px; }
     .photo-athletes {
@@ -362,8 +361,8 @@
     .add-photo-zone .zone-icon { font-size: 40px; opacity: 0.5; }
     #fileInput, #editFileInput { display: none; }
     .preview-img {
-      width: 100%; max-height: 320px; object-fit: contain;
-      border-radius: 8px; margin-bottom: 16px; display: block;
+      width: 100%; max-height: 240px; object-fit: cover;
+      border-radius: 8px; margin-bottom: 16px;
     }
 
     /* ATHLETE AUTOCOMPLETE */
@@ -906,16 +905,44 @@ function refreshCurrentPage() {
 }
 
 // ============================================================
-// PERSISTENCE
+// CONFIG — URL de ton Cloudflare Worker (aucune clé secrète ici)
+// ============================================================
+const WORKER_URL    = 'https://sportshot-worker.thomas-plesse1.workers.dev';
+const R2_PUBLIC_URL = 'https://pub-860f841b121742d7900b605a0e34e215.r2.dev';
+// ============================================================
+
+// ============================================================
+// PERSISTENCE (DB = localStorage, photos = R2 via Worker)
 // ============================================================
 function save() {
-  try { localStorage.setItem('sportshot_db', JSON.stringify(DB)); } catch(e) {}
+  try {
+    localStorage.setItem('sportshot_db', JSON.stringify(DB));
+  } catch(e) {}
 }
 function load() {
   try {
     const raw = localStorage.getItem('sportshot_db');
     if (raw) DB = JSON.parse(raw);
   } catch(e) {}
+}
+
+// Upload une photo vers R2 via le Worker Cloudflare (aucune clé exposée)
+async function uploadToR2(file) {
+  const key = `photos/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+  const res = await fetch(`${WORKER_URL}/${key}`, {
+    method: 'PUT',
+    headers: { 'content-type': file.type || 'application/octet-stream' },
+    body: file,
+  });
+  if (!res.ok) throw new Error(`Upload échoué : ${res.status}`);
+  return `${R2_PUBLIC_URL}/${key}`;
+}
+
+// Supprime une photo de R2 via le Worker
+async function deleteFromR2(r2Url) {
+  if (!r2Url || !r2Url.startsWith(R2_PUBLIC_URL)) return;
+  const key = r2Url.replace(R2_PUBLIC_URL + '/', '');
+  await fetch(`${WORKER_URL}/${key}`, { method: 'DELETE' });
 }
 
 // ============================================================
@@ -1178,34 +1205,52 @@ function renderEventPhotos() {
 function previewPhoto(e) {
   const file = e.target.files[0];
   if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(ev) {
-    photoDataUrl = ev.target.result;
-    const preview = document.getElementById('photoPreview');
-    preview.src = photoDataUrl;
-    preview.style.display = 'block';
-    document.getElementById('zoneIcon').style.display = 'none';
-    document.getElementById('zoneText').textContent = file.name;
-  };
-  reader.readAsDataURL(file);
+  // Prévisualisation locale uniquement
+  photoDataUrl = URL.createObjectURL(file);
+  const preview = document.getElementById('photoPreview');
+  preview.src = photoDataUrl;
+  preview.style.display = 'block';
+  document.getElementById('zoneIcon').style.display = 'none';
+  document.getElementById('zoneText').textContent = file.name;
 }
 
-function savePhoto() {
-  if (!photoDataUrl) { showToast('Veuillez choisir une photo'); return; }
-  const photo = {
-    id: DB.nextPhotoId++,
-    eventId: currentEventId,
-    dataUrl: photoDataUrl,
-    legend: document.getElementById('photoLegend').value.trim(),
-    athletes: selectedAthletes.map(a => a.id),
-    createdAt: Date.now(),
-  };
-  DB.photos.push(photo);
-  save();
-  closeModal('addPhoto');
-  renderEventPhotos();
-  renderAthleteFilters();
-  showToast('Photo ajoutée ✓');
+async function savePhoto() {
+  const fileInput = document.getElementById('fileInput');
+  const file = fileInput.files[0];
+  if (!file && !photoDataUrl) { showToast('Veuillez choisir une photo'); return; }
+
+  showToast('Upload en cours…');
+  const saveBtn = document.querySelector('#modal-addPhoto .btn-primary');
+  if (saveBtn) saveBtn.disabled = true;
+
+  try {
+    let url;
+    if (file) {
+      url = await uploadToR2(file);
+    } else {
+      // fallback base64 si pas de fichier (ne devrait pas arriver)
+      url = photoDataUrl;
+    }
+    const photo = {
+      id: DB.nextPhotoId++,
+      eventId: currentEventId,
+      dataUrl: url,
+      legend: document.getElementById('photoLegend').value.trim(),
+      athletes: selectedAthletes.map(a => a.id),
+      createdAt: Date.now(),
+    };
+    DB.photos.push(photo);
+    save();
+    closeModal('addPhoto');
+    renderEventPhotos();
+    renderAthleteFilters();
+    showToast('Photo ajoutée ✓');
+  } catch(e) {
+    console.error(e);
+    showToast('Erreur upload : ' + e.message);
+  } finally {
+    if (saveBtn) saveBtn.disabled = false;
+  }
 }
 
 // ============================================================
@@ -1236,29 +1281,47 @@ function openEditPhotoModal(photoId) {
 function previewEditPhoto(e) {
   const file = e.target.files[0];
   if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(ev) {
-    editPhotoDataUrl = ev.target.result;
-    const preview = document.getElementById('editPhotoPreview');
-    preview.src = editPhotoDataUrl;
-    preview.style.display = 'block';
-  };
-  reader.readAsDataURL(file);
+  editPhotoDataUrl = URL.createObjectURL(file);
+  const preview = document.getElementById('editPhotoPreview');
+  preview.src = editPhotoDataUrl;
+  preview.style.display = 'block';
 }
 
-function saveEditPhoto() {
+async function saveEditPhoto() {
   const photo = DB.photos.find(p => p.id === editingPhotoId);
   if (!photo) return;
-  photo.dataUrl = editPhotoDataUrl;
-  photo.legend = document.getElementById('editPhotoLegend').value.trim();
-  photo.athletes = editSelectedAthletes.map(a => a.id);
-  save();
-  closeModal('editPhoto');
-  renderEventPhotos();
-  renderAthleteFilters();
-  // also refresh athlete page if active
-  if (document.getElementById('page-athlete').classList.contains('active')) renderAthleteGallery();
-  showToast('Photo modifiée ✓');
+
+  const fileInput = document.getElementById('editFileInput');
+  const file = fileInput.files[0];
+
+  const saveBtn = document.querySelector('#modal-editPhoto .btn-primary');
+  if (saveBtn) saveBtn.disabled = true;
+  showToast('Sauvegarde…');
+
+  try {
+    if (file) {
+      // Supprime l'ancienne photo R2
+      if (photo.dataUrl && photo.dataUrl.startsWith(R2_PUBLIC_URL)) {
+        await deleteFromR2(photo.dataUrl);
+      }
+      photo.dataUrl = await uploadToR2(file);
+    } else if (editPhotoDataUrl && editPhotoDataUrl !== photo.dataUrl) {
+      photo.dataUrl = editPhotoDataUrl;
+    }
+    photo.legend = document.getElementById('editPhotoLegend').value.trim();
+    photo.athletes = editSelectedAthletes.map(a => a.id);
+    save();
+    closeModal('editPhoto');
+    renderEventPhotos();
+    renderAthleteFilters();
+    if (document.getElementById('page-athlete').classList.contains('active')) renderAthleteGallery();
+    showToast('Photo modifiée ✓');
+  } catch(e) {
+    console.error(e);
+    showToast('Erreur : ' + e.message);
+  } finally {
+    if (saveBtn) saveBtn.disabled = false;
+  }
 }
 
 function openEditPhotoFromLightbox() {
@@ -1278,7 +1341,11 @@ function confirmDeletePhotoFromLightbox() {
   closeLightbox();
   confirmDeletePhoto(currentLightboxPhotoId);
 }
-function doDeletePhoto(photoId) {
+async function doDeletePhoto(photoId) {
+  const photo = DB.photos.find(p => p.id === photoId);
+  if (photo && photo.dataUrl && photo.dataUrl.startsWith(R2_PUBLIC_URL)) {
+    try { await deleteFromR2(photo.dataUrl); } catch(e) { console.error('R2 delete error', e); }
+  }
   DB.photos = DB.photos.filter(p => p.id !== photoId);
   save();
   closeModal('confirmDelete');
